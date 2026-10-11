@@ -1,0 +1,262 @@
+{
+  "name": "Human Escalation Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_message"
+            },
+            {
+              "name": "escalation_reason"
+            },
+            {
+              "name": "session_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "794ce1a6-9870-4176-a8dd-d3dce5361673",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ESCALATION_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI Chatbot Escalations"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toFormat('dd/MM/yyyy HH:mm') }}",
+            "Customer Message": "={{ $json.customer_message }}",
+            "Escalation Reason": "={{ $json.escalation_reason }}",
+            "Session ID": "={{ $json.session_id }}",
+            "Status": "New",
+            "Ticket ID": "={{ $json.ticket_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Message",
+              "displayName": "Customer Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Escalation Reason",
+              "displayName": "Escalation Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Session ID",
+              "displayName": "Session ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "9ef3562b-3b95-404c-a6b5-a2e2390564df",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc4e445d-8319-4826-9de8-217ad1bf6f09",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "866864fe-1704-44cc-b540-b860f20ad8ef",
+              "name": "message",
+              "value": "Human support has been notified successfully.",
+              "type": "string"
+            },
+            {
+              "id": "0a92aa44-a106-4a45-a2d8-19ed03bc381d",
+              "name": "ticket_id",
+              "value": "={{ $('Create Ticket ID').item.json.ticket_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        0
+      ],
+      "id": "99ab54c6-e5df-4297-91de-73a550db0027",
+      "name": "Escalation Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba3c14d8-ed26-468f-8fd6-62dec423924b",
+              "name": "ticket_id",
+              "value": "={{ 'ESC-' + $now.toFormat('yyyyMMdd') + '-' + $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6afb82ab-0c2d-4750-bc8f-47745b56556a",
+      "name": "Create Ticket ID"
+    },
+    {
+      "parameters": {
+        "sendTo": "support@example.com",
+        "subject": "={{ 'New AI Chatbot Escalation - ' + $('Create Ticket ID').item.json.ticket_id }}",
+        "emailType": "text",
+        "message": "=A customer conversation requires human support.\n\nTicket ID:\n{{ $('Create Ticket ID').item.json.ticket_id }}\n\nCustomer Message:\n{{ $('When Executed by Another Workflow').item.json.customer_message }}\n\nEscalation Reason:\n{{ $('When Executed by Another Workflow').item.json.escalation_reason }}\n\nSession ID:\n{{ $('When Executed by Another Workflow').item.json.session_id }}\n\nStatus:\nNew\n\nPlease review the request in the AI Chatbot Escalations sheet.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ae394545-fec3-4da5-9c76-b451e1f88509",
+      "name": "Notify Human Support"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Notify Human Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket ID": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Human Support": {
+      "main": [
+        [
+          {
+            "node": "Escalation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
